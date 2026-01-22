@@ -64,6 +64,7 @@ const fingerOverridesByLabel: Partial<Record<string, Finger>> = {
   л: "rr",
   н: "rr",
   ш: "rr",
+  "/": "rr",
 
   х: "rp",
   щ: "rp",

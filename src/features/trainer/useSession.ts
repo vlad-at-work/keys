@@ -9,6 +9,7 @@ export type SessionState = {
   expectedChar: string;
   lastAttempt: null | {
     seq: number;
+    t: number;
     kind: "char" | "space";
     correct: boolean;
   };
@@ -22,6 +23,7 @@ export type SessionState = {
 
 export type InputEvent = {
   seq: number;
+  t: number;
   keyId: KeyId | null;
   mappedChar: string | null;
   rawChar: string | null;
@@ -82,6 +84,7 @@ export function useSession(
       setHasError(!correct);
       setLastAttempt({
         seq: input.seq,
+        t: input.t,
         kind: currentToken?.kind ?? "space",
         correct,
       });
@@ -123,6 +126,7 @@ export function useSession(
       blockCorrect.current += 1;
       setLastAttempt({
         seq: input.seq,
+        t: input.t,
         kind: currentToken?.kind ?? "char",
         correct: true,
       });
@@ -149,6 +153,7 @@ export function useSession(
     setHasError(true);
     setLastAttempt({
       seq: input.seq,
+      t: input.t,
       kind: currentToken?.kind ?? "char",
       correct: false,
     });
@@ -158,6 +163,7 @@ export function useSession(
     input.mappedChar,
     input.rawChar,
     input.seq,
+    input.t,
     mappedChars,
     hasError,
     tokens,

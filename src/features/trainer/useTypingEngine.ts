@@ -8,6 +8,7 @@ type TypingEngineState = {
   activeKeyIds: ReadonlySet<KeyId>;
   input: {
     seq: number;
+    t: number;
     keyId: KeyId | null;
     mappedChar: string | null;
     rawChar: string | null;
@@ -18,6 +19,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
   const [lastChar, setLastChar] = useState("");
   const [activeKeyIds, setActiveKeyIds] = useState<Set<KeyId>>(() => new Set());
   const [seq, setSeq] = useState(0);
+  const [lastInputT, setLastInputT] = useState(0);
   const [lastMappedChar, setLastMappedChar] = useState<string | null>(null);
   const [lastRawChar, setLastRawChar] = useState<string | null>(null);
   const [lastInputKeyId, setLastInputKeyId] = useState<KeyId | null>(null);
@@ -71,6 +73,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
       const keyId = keyIdFromEventCode(event.code);
       if (!keyId) return;
 
+      const t = performance.now();
       if (
         keyId === "keyTab" ||
         keyId === "keySpace" ||
@@ -88,6 +91,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
           ? event.key
           : null;
 
+      setLastInputT(t);
       setLastInputKeyId(keyId);
       if (typeof mapped === "string" && mapped.length > 0) {
         setLastChar(mapped);
@@ -111,11 +115,20 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
       activeKeyIds,
       input: {
         seq,
+        t: lastInputT,
         keyId: lastInputKeyId,
         mappedChar: lastMappedChar,
         rawChar: lastRawChar,
       },
     }),
-    [activeKeyIds, lastChar, lastMappedChar, lastInputKeyId, lastRawChar, seq],
+    [
+      activeKeyIds,
+      lastChar,
+      lastInputT,
+      lastMappedChar,
+      lastInputKeyId,
+      lastRawChar,
+      seq,
+    ],
   );
 }

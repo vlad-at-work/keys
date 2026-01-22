@@ -4,6 +4,7 @@ import { CurrentTracker } from "./currentTracker"
 
 type Attempt = null | {
   seq: number
+  t: number
   kind: "char" | "space"
   correct: boolean
 }
@@ -23,7 +24,6 @@ export function useCurrentTracker(attempt: Attempt): Metrics {
 
   const [target, setTarget] = useState<Metrics>({ wpm: 0, accuracy: 100 })
   const [display, setDisplay] = useState<Metrics>({ wpm: 0, accuracy: 100 })
-  const attemptCounter = useRef(0)
 
   useEffect(() => {
     if (!attempt) return
@@ -31,23 +31,23 @@ export function useCurrentTracker(attempt: Attempt): Metrics {
     lastSeq.current = attempt.seq
 
     tracker.push({
-      t: performance.now(),
+      t: attempt.t,
       correct: attempt.correct,
       counted: true,
     })
+  }, [attempt, tracker])
 
-    attemptCounter.current += 1
-    const shouldUpdateTarget =
-      attempt.kind === "space" || attemptCounter.current % 5 === 0
-
-    if (shouldUpdateTarget) {
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const intervalId = window.setInterval(() => {
       const snap = tracker.snapshot(performance.now())
       setTarget({
         wpm: snap.wpm,
         accuracy: snap.accuracy,
       })
-    }
-  }, [attempt, tracker])
+    }, 250)
+    return () => window.clearInterval(intervalId)
+  }, [tracker])
 
   useEffect(() => {
     let raf = 0

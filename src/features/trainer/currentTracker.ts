@@ -29,15 +29,21 @@ export class CurrentTracker {
     this.prune(now)
     let correct = 0
     let attempted = 0
+    let oldestCountedT: number | null = null
 
     for (const attempt of this.attempts) {
       if (!attempt.counted) continue
       attempted += 1
       if (attempt.correct) correct += 1
+      if (oldestCountedT === null) oldestCountedT = attempt.t
     }
 
     const accuracy = attempted > 0 ? (correct / attempted) * 100 : 100
-    const minutes = this.windowMs / 60_000
+    const spanMs =
+      oldestCountedT === null
+        ? 0
+        : Math.min(this.windowMs, Math.max(0, now - oldestCountedT))
+    const minutes = spanMs / 60_000
     const words = correct / 5
     const wpm = minutes > 0 ? words / minutes : 0
 
