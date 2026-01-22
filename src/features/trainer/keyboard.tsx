@@ -16,16 +16,61 @@ const fingerColorVar: Record<Finger, string> = {
 };
 
 const fingerOverridesByLabel: Partial<Record<string, Finger>> = {
-  // Statica "Angle Mod" guidance:
-  // п should be pressed with the index finger.
-  // ы should be pressed with the middle finger.
-  // э should be pressed with the ring finger.
-  // ъ should be pressed with the middle finger.
-  п: "li",
-  ы: "lm",
+  // Statica finger zones (incl. "Angle Mod"):
+  // ьи: left pinky
+  // уеэ: left ring
+  // аоы: left middle
+  // жюкяпй: left index
+  // гбмтдв: right index
+  // рсч: right middle
+  // лнш: right ring
+  // хщфз.ц: right pinky
+  //
+  // Notes:
+  // - "," is commonly hit with either index depending on context; both index
+  //   fingers share the same color, so we mark it as index here.
+  ь: "lp",
+  и: "lp",
+
+  у: "lr",
+  е: "lr",
   э: "lr",
+
+  а: "lm",
+  о: "lm",
+  ы: "lm",
   ъ: "lm",
   Ъ: "lm",
+
+  ж: "li",
+  ю: "li",
+  к: "li",
+  я: "li",
+  п: "li",
+  й: "li",
+  ",": "li",
+
+  г: "ri",
+  б: "ri",
+  м: "ri",
+  т: "ri",
+  д: "ri",
+  в: "ri",
+
+  р: "rm",
+  с: "rm",
+  ч: "rm",
+
+  л: "rr",
+  н: "rr",
+  ш: "rr",
+
+  х: "rp",
+  щ: "rp",
+  ф: "rp",
+  з: "rp",
+  ".": "rp",
+  ц: "rp",
 };
 
 function mixed(colorVar: string, weight: number) {
