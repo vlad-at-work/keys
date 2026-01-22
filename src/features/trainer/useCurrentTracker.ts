@@ -14,6 +14,8 @@ type Metrics = {
   accuracy: number
 }
 
+const SNAPSHOT_INTERVAL_MS = 1000
+
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
@@ -45,7 +47,7 @@ export function useCurrentTracker(attempt: Attempt): Metrics {
         wpm: snap.wpm,
         accuracy: snap.accuracy,
       })
-    }, 250)
+    }, SNAPSHOT_INTERVAL_MS)
     return () => window.clearInterval(intervalId)
   }, [tracker])
 
@@ -53,8 +55,9 @@ export function useCurrentTracker(attempt: Attempt): Metrics {
     let raf = 0
     const tick = () => {
       setDisplay((prev) => {
-        const wpm = prev.wpm + (target.wpm - prev.wpm) * 0.18
-        const accuracy = prev.accuracy + (target.accuracy - prev.accuracy) * 0.18
+        const wpm = prev.wpm + (target.wpm - prev.wpm) * 0.12
+        const accuracy =
+          prev.accuracy + (target.accuracy - prev.accuracy) * 0.12
 
         const done =
           Math.abs(target.wpm - wpm) < 0.05 && Math.abs(target.accuracy - accuracy) < 0.05
