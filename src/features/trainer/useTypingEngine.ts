@@ -9,6 +9,7 @@ type TypingEngineState = {
   input: {
     seq: number;
     t: number;
+    altKey: boolean;
     keyId: KeyId | null;
     mappedChar: string | null;
     rawChar: string | null;
@@ -20,6 +21,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
   const [activeKeyIds, setActiveKeyIds] = useState<Set<KeyId>>(() => new Set());
   const [seq, setSeq] = useState(0);
   const [lastInputT, setLastInputT] = useState(0);
+  const [lastInputAltKey, setLastInputAltKey] = useState(false);
   const [lastMappedChar, setLastMappedChar] = useState<string | null>(null);
   const [lastRawChar, setLastRawChar] = useState<string | null>(null);
   const [lastInputKeyId, setLastInputKeyId] = useState<KeyId | null>(null);
@@ -74,6 +76,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
       if (!keyId) return;
 
       const t = performance.now();
+      const altKey = event.altKey === true;
       if (
         keyId === "keyTab" ||
         keyId === "keySpace" ||
@@ -92,6 +95,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
           : null;
 
       setLastInputT(t);
+      setLastInputAltKey(altKey);
       setLastInputKeyId(keyId);
       if (typeof mapped === "string" && mapped.length > 0) {
         setLastChar(mapped);
@@ -116,6 +120,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
       input: {
         seq,
         t: lastInputT,
+        altKey: lastInputAltKey,
         keyId: lastInputKeyId,
         mappedChar: lastMappedChar,
         rawChar: lastRawChar,
@@ -125,6 +130,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
       activeKeyIds,
       lastChar,
       lastInputT,
+      lastInputAltKey,
       lastMappedChar,
       lastInputKeyId,
       lastRawChar,

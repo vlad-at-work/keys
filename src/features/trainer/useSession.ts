@@ -24,10 +24,13 @@ export type SessionState = {
 export type InputEvent = {
   seq: number;
   t: number;
+  altKey: boolean;
   keyId: KeyId | null;
   mappedChar: string | null;
   rawChar: string | null;
 };
+
+const BLOCK_SIZE = 80;
 
 export function useSession(
   tokens: readonly Token[],
@@ -68,7 +71,17 @@ export function useSession(
       }
 
       setHasError(false);
-      setCursor((prev) => Math.max(0, prev - 1));
+      if (input.altKey) {
+        setCursor((prev) => {
+          if (prev <= 0) return 0;
+          let idx = prev;
+          while (idx > 0 && tokens[idx - 1]?.expected === " ") idx -= 1;
+          while (idx > 0 && tokens[idx - 1]?.expected !== " ") idx -= 1;
+          return idx;
+        });
+      } else {
+        setCursor((prev) => Math.max(0, prev - 1));
+      }
       setLastAttempt(null);
       return;
     }
@@ -103,6 +116,18 @@ export function useSession(
           blockAttempted.current = 0;
           blockCorrect.current = 0;
           return 0;
+        }
+        if (next > 0 && next % BLOCK_SIZE === 0) {
+          const attempted = blockAttempted.current;
+          const correctCount = blockCorrect.current;
+          setLastBlockResult({
+            seq: input.seq,
+            attempted,
+            correct: correctCount,
+            accuracy: attempted > 0 ? correctCount / attempted : 0,
+          });
+          blockAttempted.current = 0;
+          blockCorrect.current = 0;
         }
         return next;
       });
@@ -145,6 +170,18 @@ export function useSession(
           blockCorrect.current = 0;
           return 0;
         }
+        if (next > 0 && next % BLOCK_SIZE === 0) {
+          const attempted = blockAttempted.current;
+          const correctCount = blockCorrect.current;
+          setLastBlockResult({
+            seq: input.seq,
+            attempted,
+            correct: correctCount,
+            accuracy: attempted > 0 ? correctCount / attempted : 0,
+          });
+          blockAttempted.current = 0;
+          blockCorrect.current = 0;
+        }
         return next;
       });
       return;
@@ -164,6 +201,7 @@ export function useSession(
     input.rawChar,
     input.seq,
     input.t,
+    input.altKey,
     mappedChars,
     hasError,
     tokens,
