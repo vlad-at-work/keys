@@ -1,4 +1,5 @@
 import { ALL_KEY_IDS, type KeyId, type LayoutMap } from "../keys";
+import { graphiteLayoutUnshifted } from "./graphite";
 import { staticaLayoutUnshifted } from "./statica";
 
 export const LOCALSTORAGE_KEY = "keyshape.layoutJson.v1";
@@ -92,6 +93,12 @@ export function validateKeyId(key: string): key is KeyId {
 
 export const DEFAULT_LAYOUT_JSON = JSON.stringify(
   staticaLayoutUnshifted,
+  null,
+  2,
+);
+
+export const GRAPHITE_LAYOUT_JSON = JSON.stringify(
+  graphiteLayoutUnshifted,
   null,
   2,
 );

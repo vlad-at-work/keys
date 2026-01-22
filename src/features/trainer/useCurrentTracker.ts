@@ -14,8 +14,6 @@ type Metrics = {
   accuracy: number
 }
 
-const SNAPSHOT_INTERVAL_MS = 1000
-
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
@@ -37,27 +35,23 @@ export function useCurrentTracker(attempt: Attempt): Metrics {
       correct: attempt.correct,
       counted: true,
     })
-  }, [attempt, tracker])
 
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const intervalId = window.setInterval(() => {
-      const snap = tracker.snapshot(performance.now())
+    if (attempt.kind === "space") {
+      const snap = tracker.snapshot(attempt.t)
       setTarget({
         wpm: snap.wpm,
         accuracy: snap.accuracy,
       })
-    }, SNAPSHOT_INTERVAL_MS)
-    return () => window.clearInterval(intervalId)
-  }, [tracker])
+    }
+  }, [attempt, tracker])
 
   useEffect(() => {
     let raf = 0
     const tick = () => {
       setDisplay((prev) => {
-        const wpm = prev.wpm + (target.wpm - prev.wpm) * 0.12
+        const wpm = prev.wpm + (target.wpm - prev.wpm) * 0.16
         const accuracy =
-          prev.accuracy + (target.accuracy - prev.accuracy) * 0.12
+          prev.accuracy + (target.accuracy - prev.accuracy) * 0.16
 
         const done =
           Math.abs(target.wpm - wpm) < 0.05 && Math.abs(target.accuracy - accuracy) < 0.05

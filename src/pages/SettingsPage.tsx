@@ -3,12 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useLayoutStore } from "@/features/trainer/layouts/layoutContext";
+import {
+  DEFAULT_LAYOUT_JSON,
+  GRAPHITE_LAYOUT_JSON,
+} from "@/features/trainer/layouts/layoutStore";
 import { MAX_TRAINING_TEXT_LEN } from "@/features/trainer/trainingTextStore";
 import { useTrainingTextStore } from "@/features/trainer/trainingTextContext";
 
 export function SettingsPage() {
-  const { layoutJsonText, resetLayoutJson, setLayoutJsonText } =
-    useLayoutStore();
+  const { layoutJsonText, setLayoutJsonText } = useLayoutStore();
   const { trainingTextRaw, resetTrainingText, setTrainingTextRaw } =
     useTrainingTextStore();
 
@@ -27,9 +30,20 @@ export function SettingsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <CardTitle>Layout JSON</CardTitle>
-              <Button variant="outline" onClick={resetLayoutJson}>
-                Reset to default
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setLayoutJsonText(DEFAULT_LAYOUT_JSON)}
+                >
+                  Restore Statica
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setLayoutJsonText(GRAPHITE_LAYOUT_JSON)}
+                >
+                  Restore Graphite
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="grid gap-3">
               <Textarea
