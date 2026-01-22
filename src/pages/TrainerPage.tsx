@@ -101,7 +101,7 @@ export function TrainerPage() {
 
   return (
     <div className="mx-auto w-full px-6 py-10">
-      <div className="grid min-h-[calc(100vh-5rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-10">
+      <div className="grid min-h-[calc(100vh-10rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-10">
         <div />
 
         <main className="flex min-h-0 items-center">
