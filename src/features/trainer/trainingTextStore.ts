@@ -2,7 +2,7 @@ export const TRAINING_TEXT_LOCALSTORAGE_KEY = "keyshape.trainingText.v1";
 export const MAX_TRAINING_TEXT_LEN = 10000;
 
 export const DEFAULT_TRAINING_TEXT =
-  "и в и в и в и в в и в и в и в и не на не на не на на не на не на не и не и не и не не и не и не и в не в не в не не в не в не в";
+  "в это не это а то не это в это не то а это не в это";
 
 export function normalizeTrainingText(raw: string): string {
   const capped = raw.slice(0, MAX_TRAINING_TEXT_LEN);

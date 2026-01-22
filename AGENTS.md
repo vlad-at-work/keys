@@ -5,6 +5,7 @@
 - Do not create new `.md` files unless explicitly asked.
 - Do not create git commits unless explicitly asked.
 - When you make code changes, end your response with a proposed commit message.
+- Project uses bun (bun run build)
 
 ## Vibecode versioning
 

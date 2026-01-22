@@ -1,1 +1,1 @@
-export const VIBECODE_VERSION = "0.12.3";
+export const VIBECODE_VERSION = "0.12.4";
