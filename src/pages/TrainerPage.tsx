@@ -100,9 +100,11 @@ export function TrainerPage() {
   }, [session.lastBlockResult]);
 
   return (
-    <div className="mx-auto w-full min-h-[100svh] px-6 py-6">
-      <div className="flex min-h-0 flex-col gap-6">
-        <main className="flex flex-1 items-center justify-center">
+    <div className="mx-auto w-full px-6 py-10">
+      <div className="grid min-h-[calc(100vh-5rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-10">
+        <div />
+
+        <main className="flex min-h-0 items-center">
           <Chunk
             tokens={viewport.viewTokens}
             cursor={viewport.viewCursor}
