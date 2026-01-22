@@ -10,6 +10,7 @@
 
 - `src/version.ts` is the source of truth for the UI version string.
 - Starting with `0.11.1`, we use SemVer: `MAJOR.MINOR.PATCH`.
+- Any time you change something under `src/`, explicitly consider whether this warrants a version bump (and which level) using the rules below; if you decide not to bump, say why.
 - Bump rules:
   - `PATCH`: UI polish, bug fixes, copy tweaks, tiny refactors.
   - `MINOR`: new user-facing features/settings, new screens, new mechanics.

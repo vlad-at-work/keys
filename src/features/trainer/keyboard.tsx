@@ -80,9 +80,9 @@ function mixed(colorVar: string, weight: number) {
 function keyBg(finger: Finger) {
   if (finger === "spacer") return "transparent";
   const varName = fingerColorVar[finger];
-  if (finger === "mod") return mixed(varName, 35);
-  if (finger === "thumb") return mixed(varName, 55);
-  return mixed(varName, 45);
+  if (finger === "mod") return mixed(varName, 42);
+  if (finger === "thumb") return mixed(varName, 65);
+  return mixed(varName, 65);
 }
 
 function keyText(finger: Finger) {
