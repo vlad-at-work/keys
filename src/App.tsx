@@ -114,14 +114,13 @@ function AppShell({ route }: { route: Route }) {
             <span className="hidden sm:inline">Settings</span>
           </a>
         </Button>
+      </div>
 
-        {route === "main" ? (
-          <>
-            <Separator orientation="vertical" className="mx-1 h-6" />
+      {route === "main" ? (
+        <div className="fixed right-6 top-6 z-50 grid gap-2 rounded-lg border border-border/50 bg-background/70 p-2 backdrop-blur">
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Layout</div>
             <div className="flex items-center gap-1">
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                Layout
-              </span>
               <Button
                 variant={activeLayoutPreset === "statica" ? "secondary" : "ghost"}
                 size="sm"
@@ -141,12 +140,17 @@ function AppShell({ route }: { route: Route }) {
                 Graphite
               </Button>
             </div>
+          </div>
+
+          <Separator className="bg-border/60" />
+
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Highlights</div>
             <div className="flex items-center gap-1">
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                Highlights
-              </span>
               <Button
-                variant={activeHighlightPreset === "angle" ? "secondary" : "ghost"}
+                variant={
+                  activeHighlightPreset === "angle" ? "secondary" : "ghost"
+                }
                 size="sm"
                 onClick={() => setHighlightPreset("angle")}
                 title="Switch highlights to Angle"
@@ -164,9 +168,9 @@ function AppShell({ route }: { route: Route }) {
                 Normal
               </Button>
             </div>
-          </>
-        ) : null}
-      </div>
+          </div>
+        </div>
+      ) : null}
 
       {showError ? (
         <div className="fixed inset-x-0 top-0 z-[9999] px-4 pt-4">
