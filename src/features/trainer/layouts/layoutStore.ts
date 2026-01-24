@@ -1,5 +1,5 @@
-import { ALL_KEY_IDS, type KeyId, type LayoutMap } from "../keys";
-import { graphiteLayoutUnshifted } from "./graphite";
+import { ALL_KEY_IDS, type KeyId, type LayoutLayers, type LayoutMap } from "../keys";
+import { graphiteLayoutShiftedOverrides, graphiteLayoutUnshifted } from "./graphite";
 import { staticaLayoutUnshifted } from "./statica";
 
 export const LOCALSTORAGE_KEY = "keyshape.layoutJson.v1";
@@ -15,6 +15,31 @@ export const LAYOUT_JSON_LOCALSTORAGE_KEYS: Record<LayoutPresetId, string> = {
 export const DEFAULT_LAYOUT_PRESET: LayoutPresetId = "statica";
 
 const keyIdSet = new Set<string>(ALL_KEY_IDS as readonly string[]);
+
+const DEFAULT_SHIFTED_CHAR_MAP: Record<string, string> = {
+  "`": "~",
+  "1": "!",
+  "2": "@",
+  "3": "#",
+  "4": "$",
+  "5": "%",
+  "6": "^",
+  "7": "&",
+  "8": "*",
+  "9": "(",
+  "0": ")",
+  "-": "_",
+  "=": "+",
+  "[": "{",
+  "]": "}",
+  "\\": "|",
+  ";": ":",
+  "'": '"',
+  ",": "<",
+  ".": ">",
+  "/": "?",
+  " ": " ",
+};
 
 function findDuplicateTopLevelKeys(text: string): string[] {
   const seen = new Set<string>();
@@ -101,14 +126,27 @@ export function validateKeyId(key: string): key is KeyId {
   return keyIdSet.has(key);
 }
 
+function deriveShiftedFromUnshifted(unshifted: LayoutMap): LayoutMap {
+  const shifted: LayoutMap = {};
+  for (const [keyId, value] of Object.entries(unshifted) as Array<
+    [KeyId, string]
+  >) {
+    if (typeof value !== "string" || value.length === 0) continue;
+    const mapped =
+      DEFAULT_SHIFTED_CHAR_MAP[value] ?? (value.length === 1 ? value.toUpperCase() : value);
+    shifted[keyId] = mapped;
+  }
+  return shifted;
+}
+
 export const DEFAULT_LAYOUT_JSON = JSON.stringify(
-  staticaLayoutUnshifted,
+  { unshifted: staticaLayoutUnshifted, shifted: {} satisfies LayoutMap },
   null,
   2,
 );
 
 export const GRAPHITE_LAYOUT_JSON = JSON.stringify(
-  graphiteLayoutUnshifted,
+  { unshifted: graphiteLayoutUnshifted, shifted: graphiteLayoutShiftedOverrides },
   null,
   2,
 );
@@ -117,10 +155,8 @@ export function getDefaultLayoutJsonForPreset(preset: LayoutPresetId): string {
   return preset === "graphite" ? GRAPHITE_LAYOUT_JSON : DEFAULT_LAYOUT_JSON;
 }
 
-export function getInitialLayoutJson(): string {
-  if (typeof window === "undefined") return DEFAULT_LAYOUT_JSON;
-  const stored = window.localStorage.getItem(LOCALSTORAGE_KEY);
-  return stored ?? DEFAULT_LAYOUT_JSON;
+function getDefaultShiftedOverridesForPreset(preset: LayoutPresetId): LayoutMap {
+  return preset === "graphite" ? graphiteLayoutShiftedOverrides : {};
 }
 
 function countLayoutDiffKeys(a: LayoutMap, b: LayoutMap): number {
@@ -133,9 +169,9 @@ function countLayoutDiffKeys(a: LayoutMap, b: LayoutMap): number {
   return count;
 }
 
-function parseLayoutJsonSafe(text: string): LayoutMap | null {
+function parseLayoutUnshiftedOnlySafe(text: string): LayoutMap | null {
   try {
-    return parseLayoutJson(text);
+    return parseLayoutJson(text).unshifted;
   } catch {
     return null;
   }
@@ -143,6 +179,19 @@ function parseLayoutJsonSafe(text: string): LayoutMap | null {
 
 function validateLayoutPresetId(text: string): text is LayoutPresetId {
   return text === "statica" || text === "graphite";
+}
+
+function normalizeLayoutJsonText(text: string): string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return text;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return text;
+  const obj = parsed as Record<string, unknown>;
+  if ("unshifted" in obj || "shifted" in obj) return text;
+  return JSON.stringify({ unshifted: obj, shifted: {} }, null, 2);
 }
 
 export function getInitialLayoutState(): {
@@ -159,12 +208,14 @@ export function getInitialLayoutState(): {
   }
 
   const jsonByPreset: Record<LayoutPresetId, string> = {
-    statica:
+    statica: normalizeLayoutJsonText(
       window.localStorage.getItem(LAYOUT_JSON_LOCALSTORAGE_KEYS.statica) ??
-      DEFAULT_LAYOUT_JSON,
-    graphite:
+        DEFAULT_LAYOUT_JSON,
+    ),
+    graphite: normalizeLayoutJsonText(
       window.localStorage.getItem(LAYOUT_JSON_LOCALSTORAGE_KEYS.graphite) ??
-      GRAPHITE_LAYOUT_JSON,
+        GRAPHITE_LAYOUT_JSON,
+    ),
   };
 
   const storedPreset = window.localStorage.getItem(
@@ -179,27 +230,43 @@ export function getInitialLayoutState(): {
     return { preset: DEFAULT_LAYOUT_PRESET, jsonByPreset };
   }
 
-  if (legacyJson === DEFAULT_LAYOUT_JSON) {
-    return { preset: "statica", jsonByPreset: { ...jsonByPreset, statica: legacyJson } };
-  }
-  if (legacyJson === GRAPHITE_LAYOUT_JSON) {
-    return { preset: "graphite", jsonByPreset: { ...jsonByPreset, graphite: legacyJson } };
-  }
-
-  const legacyMap = parseLayoutJsonSafe(legacyJson);
-  const staticaMap = parseLayoutJsonSafe(DEFAULT_LAYOUT_JSON);
-  const graphiteMap = parseLayoutJsonSafe(GRAPHITE_LAYOUT_JSON);
-  if (!legacyMap || !staticaMap || !graphiteMap) {
-    return { preset: DEFAULT_LAYOUT_PRESET, jsonByPreset: { ...jsonByPreset, statica: legacyJson } };
+  const legacyMap = parseLayoutUnshiftedOnlySafe(legacyJson);
+  if (!legacyMap) {
+    return {
+      preset: DEFAULT_LAYOUT_PRESET,
+      jsonByPreset: { ...jsonByPreset, statica: normalizeLayoutJsonText(legacyJson) },
+    };
   }
 
-  const staticaDiff = countLayoutDiffKeys(legacyMap, staticaMap);
-  const graphiteDiff = countLayoutDiffKeys(legacyMap, graphiteMap);
+  const staticaDiff = countLayoutDiffKeys(legacyMap, staticaLayoutUnshifted);
+  const graphiteDiff = countLayoutDiffKeys(legacyMap, graphiteLayoutUnshifted);
   const preset = graphiteDiff < staticaDiff ? "graphite" : "statica";
-  return { preset, jsonByPreset: { ...jsonByPreset, [preset]: legacyJson } };
+  return {
+    preset,
+    jsonByPreset: { ...jsonByPreset, [preset]: normalizeLayoutJsonText(legacyJson) },
+  };
 }
 
-export function parseLayoutJson(text: string): LayoutMap {
+function parseLayerMap(value: unknown, label: string): LayoutMap {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be an object mapping KeyId -> string.`);
+  }
+
+  const map: LayoutMap = {};
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (!validateKeyId(key)) {
+      throw new Error(`Unknown key id: "${key}" in ${label}.`);
+    }
+    if (typeof val !== "string") {
+      throw new Error(`Value for "${key}" in ${label} must be a string.`);
+    }
+    map[key] = val;
+  }
+
+  return map;
+}
+
+export function parseLayoutJson(text: string): LayoutLayers {
   const duplicates = findDuplicateTopLevelKeys(text);
   if (duplicates.length > 0) {
     throw new Error(
@@ -220,21 +287,32 @@ export function parseLayoutJson(text: string): LayoutMap {
   }
 
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("Layout JSON must be an object mapping KeyId -> string.");
+    throw new Error(
+      'Layout JSON must be either {"unshifted": {...}, "shifted": {...}} or a legacy object mapping KeyId -> string.',
+    );
   }
 
-  const map: LayoutMap = {};
-  for (const [key, value] of Object.entries(
-    parsed as Record<string, unknown>,
-  )) {
-    if (!validateKeyId(key)) {
-      throw new Error(`Unknown key id: "${key}".`);
-    }
-    if (typeof value !== "string") {
-      throw new Error(`Value for "${key}" must be a string.`);
-    }
-    map[key] = value;
+  const obj = parsed as Record<string, unknown>;
+  if ("unshifted" in obj || "shifted" in obj) {
+    const unshifted = "unshifted" in obj ? parseLayerMap(obj.unshifted, "unshifted") : {};
+    const shifted = "shifted" in obj ? parseLayerMap(obj.shifted, "shifted") : {};
+    return { unshifted, shifted };
   }
 
-  return { ...staticaLayoutUnshifted, ...map };
+  return { unshifted: parseLayerMap(obj, "unshifted"), shifted: {} };
+}
+
+export function getEffectiveLayoutLayersForPreset(
+  preset: LayoutPresetId,
+  text: string,
+): LayoutLayers {
+  const overrides = parseLayoutJson(text);
+  const unshifted = { ...(preset === "graphite" ? graphiteLayoutUnshifted : staticaLayoutUnshifted), ...overrides.unshifted };
+  const derivedShifted = deriveShiftedFromUnshifted(unshifted);
+  const shifted = {
+    ...derivedShifted,
+    ...getDefaultShiftedOverridesForPreset(preset),
+    ...overrides.shifted,
+  };
+  return { unshifted, shifted };
 }

@@ -1,22 +1,21 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import type { LayoutMap } from "../keys";
-import { staticaLayoutUnshifted } from "./statica";
+import type { LayoutLayers } from "../keys";
 import {
   DEFAULT_LAYOUT_PRESET,
   getDefaultLayoutJsonForPreset,
+  getEffectiveLayoutLayersForPreset,
   getInitialLayoutState,
   LAYOUT_JSON_LOCALSTORAGE_KEYS,
   LAYOUT_PRESET_LOCALSTORAGE_KEY,
   LOCALSTORAGE_KEY,
-  parseLayoutJson,
   type LayoutPresetId,
 } from "./layoutStore";
 
 type LayoutContextValue = {
   layoutPreset: LayoutPresetId;
   layoutJsonText: string;
-  layoutMap: LayoutMap;
+  layoutLayers: LayoutLayers;
   layoutJsonError: string | null;
   setLayoutPreset: (preset: LayoutPresetId) => void;
   setLayoutJsonText: (text: string) => void;
@@ -35,11 +34,14 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   >(() => initialState.jsonByPreset);
   const layoutJsonText = layoutJsonByPreset[layoutPreset];
 
-  const [layoutMap, setLayoutMap] = useState<LayoutMap>(() => {
+  const [layoutLayers, setLayoutLayers] = useState<LayoutLayers>(() => {
     try {
-      return parseLayoutJson(layoutJsonText);
+      return getEffectiveLayoutLayersForPreset(layoutPreset, layoutJsonText);
     } catch {
-      return staticaLayoutUnshifted;
+      return getEffectiveLayoutLayersForPreset(
+        layoutPreset,
+        getDefaultLayoutJsonForPreset(layoutPreset),
+      );
     }
   });
   const [layoutJsonError, setLayoutJsonError] = useState<string | null>(null);
@@ -50,8 +52,8 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
     setLayoutPresetState(preset);
     const nextText = layoutJsonByPreset[preset] ?? getDefaultLayoutJsonForPreset(preset);
     try {
-      const parsed = parseLayoutJson(nextText);
-      setLayoutMap(parsed);
+      const parsed = getEffectiveLayoutLayersForPreset(preset, nextText);
+      setLayoutLayers(parsed);
       setLayoutJsonError(null);
     } catch (err) {
       setLayoutJsonError(err instanceof Error ? err.message : "Invalid layout JSON.");
@@ -61,8 +63,8 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const setLayoutJsonText = (text: string) => {
     setLayoutJsonByPreset((prev) => ({ ...prev, [layoutPreset]: text }));
     try {
-      const parsed = parseLayoutJson(text);
-      setLayoutMap(parsed);
+      const parsed = getEffectiveLayoutLayersForPreset(layoutPreset, text);
+      setLayoutLayers(parsed);
       setLayoutJsonError(null);
     } catch (err) {
       setLayoutJsonError(err instanceof Error ? err.message : "Invalid layout JSON.");
@@ -98,13 +100,13 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
     () => ({
       layoutPreset,
       layoutJsonText,
-      layoutMap,
+      layoutLayers,
       layoutJsonError,
       setLayoutPreset,
       setLayoutJsonText,
       resetLayoutJson,
     }),
-    [layoutJsonError, layoutJsonText, layoutMap, layoutPreset],
+    [layoutJsonError, layoutJsonText, layoutLayers, layoutPreset],
   );
 
   return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>;

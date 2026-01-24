@@ -15,12 +15,14 @@ import { useLayoutStore } from "@/features/trainer/layouts/layoutContext";
 import { useTrainingTextStore } from "@/features/trainer/trainingTextContext";
 
 function buildMappedCharSet(
-  layoutMap: Record<string, string>,
+  layoutLayers: { unshifted: Record<string, string>; shifted: Record<string, string> },
 ): ReadonlySet<string> {
   const set = new Set<string>();
-  for (const value of Object.values(layoutMap)) {
-    if (typeof value !== "string") continue;
-    if (value.length === 1) set.add(value);
+  for (const layer of [layoutLayers.unshifted, layoutLayers.shifted]) {
+    for (const value of Object.values(layer)) {
+      if (typeof value !== "string") continue;
+      if (value.length === 1) set.add(value);
+    }
   }
   return set;
 }
@@ -71,10 +73,10 @@ function getViewport<T>(tokens: readonly T[], cursor: number) {
 
 export function TrainerPage() {
   const { mode } = useTypingMode();
-  const { layoutMap } = useLayoutStore();
+  const { layoutLayers } = useLayoutStore();
   const { trainingText } = useTrainingTextStore();
   const { highlightMap } = useHighlightStore();
-  const { activeKeyIds, input } = useTypingEngine(layoutMap);
+  const { activeKeyIds, input, shiftHeld } = useTypingEngine(layoutLayers);
   const ignorePracticeSeq = useRef<number | null>(null);
   const lastMode = useRef(mode);
 
@@ -90,7 +92,10 @@ export function TrainerPage() {
     [trainingText],
   );
   const pagedTokens = useMemo(() => addPageEndSpaces(tokens), [tokens]);
-  const mappedChars = useMemo(() => buildMappedCharSet(layoutMap), [layoutMap]);
+  const mappedChars = useMemo(
+    () => buildMappedCharSet(layoutLayers),
+    [layoutLayers],
+  );
 
   const sessionInput = useMemo(() => {
     if (mode !== "practice") {
@@ -175,9 +180,10 @@ export function TrainerPage() {
 
         <footer className="pb-2">
           <Keyboard
-            layout={layoutMap}
+            layout={layoutLayers}
             highlightMap={highlightMap}
             activeKeyIds={activeKeyIds}
+            shiftHeld={shiftHeld}
           />
           {mode === "practice" ? (
             <div className="mt-4">

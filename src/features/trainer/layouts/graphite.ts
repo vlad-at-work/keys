@@ -54,3 +54,10 @@ export const graphiteLayoutUnshifted: LayoutMap = {
   keySpace: " ",
 };
 
+export const graphiteLayoutShiftedOverrides: LayoutMap = {
+  // Layout-specific shifted glyphs (letters are derived via uppercasing).
+  keyY: "—",
+  keyQuote: "?",
+  keyPeriod: '"',
+  keySlash: "<",
+};

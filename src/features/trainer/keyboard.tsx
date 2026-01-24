@@ -1,5 +1,5 @@
 import { trainerGeometry, type Finger, type KeyDef } from "./geometry";
-import type { KeyId, LayoutMap } from "./keys";
+import type { KeyId, LayoutLayers } from "./keys";
 import type { HighlightMap } from "./highlightStore";
 import { getHighlightedFinger } from "./highlightStore";
 
@@ -39,16 +39,19 @@ function keyText(finger: Finger) {
 function Keycap({
   keyDef,
   layout,
+  shiftHeld,
   highlightMap,
   isActive,
 }: {
   keyDef: KeyDef;
-  layout: LayoutMap;
+  layout: LayoutLayers;
+  shiftHeld: boolean;
   highlightMap: HighlightMap;
   isActive: boolean;
 }) {
   const isSpacer = keyDef.finger === "spacer";
-  const label = keyDef.fixedLabel ?? layout[keyDef.id] ?? "";
+  const activeLayer = shiftHeld ? layout.shifted : layout.unshifted;
+  const label = keyDef.fixedLabel ?? activeLayer[keyDef.id] ?? "";
   const finger = getHighlightedFinger(keyDef.finger, keyDef.id, highlightMap);
 
   return (
@@ -79,10 +82,12 @@ export function Keyboard({
   layout,
   highlightMap,
   activeKeyIds,
+  shiftHeld,
 }: {
-  layout: LayoutMap;
+  layout: LayoutLayers;
   highlightMap: HighlightMap;
   activeKeyIds: ReadonlySet<KeyId>;
+  shiftHeld: boolean;
 }) {
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -103,6 +108,7 @@ export function Keyboard({
                     key={keyDef.id}
                     keyDef={keyDef}
                     layout={layout}
+                    shiftHeld={shiftHeld}
                     highlightMap={highlightMap}
                     isActive={activeKeyIds.has(keyDef.id)}
                   />

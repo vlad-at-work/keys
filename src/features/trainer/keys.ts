@@ -65,6 +65,7 @@ export const ALL_KEY_IDS = [
 export type KeyId = (typeof ALL_KEY_IDS)[number];
 
 export type LayoutMap = Partial<Record<KeyId, string>>;
+export type LayoutLayers = { unshifted: LayoutMap; shifted: LayoutMap };
 
 export function keyIdFromEventCode(code: string): KeyId | null {
   if (code.startsWith("Key") && code.length === 4) {

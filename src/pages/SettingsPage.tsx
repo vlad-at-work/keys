@@ -64,7 +64,11 @@ export function SettingsPage() {
                 className="min-h-[420px]"
               />
               <div className="text-sm text-muted-foreground">
-                Keys are internal ids like{" "}
+                Format is{" "}
+                <code className="font-mono">
+                  {"{ unshifted: { ... }, shifted: { ... } }"}
+                </code>
+                . Keys are internal ids like{" "}
                 <code className="font-mono">"keyA"</code>,{" "}
                 <code className="font-mono">"keyBackslash"</code>,{" "}
                 <code className="font-mono">"keySpace"</code>. Values must be

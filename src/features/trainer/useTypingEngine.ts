@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { KeyId, LayoutMap } from "./keys";
+import type { KeyId, LayoutLayers } from "./keys";
 import { keyIdFromEventCode } from "./keys";
 
 type TypingEngineState = {
   lastChar: string;
   activeKeyIds: ReadonlySet<KeyId>;
+  shiftHeld: boolean;
   input: {
     seq: number;
     t: number;
@@ -16,9 +17,10 @@ type TypingEngineState = {
   };
 };
 
-export function useTypingEngine(layout: LayoutMap): TypingEngineState {
+export function useTypingEngine(layout: LayoutLayers): TypingEngineState {
   const [lastChar, setLastChar] = useState("");
   const [activeKeyIds, setActiveKeyIds] = useState<Set<KeyId>>(() => new Set());
+  const [shiftHeld, setShiftHeld] = useState(false);
   const [seq, setSeq] = useState(0);
   const [lastInputT, setLastInputT] = useState(0);
   const [lastInputAltKey, setLastInputAltKey] = useState(false);
@@ -26,6 +28,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
   const [lastRawChar, setLastRawChar] = useState<string | null>(null);
   const [lastInputKeyId, setLastInputKeyId] = useState<KeyId | null>(null);
   const timeoutsByKey = useRef<Map<KeyId, number>>(new Map());
+  const shiftDown = useRef({ left: false, right: false });
 
   const flashKey = useCallback((keyId: KeyId) => {
     setActiveKeyIds((prev) => {
@@ -59,7 +62,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
   }, []);
 
   useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
+    const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const isEditable =
         target instanceof HTMLInputElement ||
@@ -77,6 +80,10 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
 
       const t = performance.now();
       const altKey = event.altKey === true;
+      if (keyId === "keyLshift") shiftDown.current.left = true;
+      if (keyId === "keyRshift") shiftDown.current.right = true;
+      if (event.shiftKey) setShiftHeld(true);
+
       if (
         keyId === "keyTab" ||
         keyId === "keySpace" ||
@@ -88,7 +95,8 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
 
       flashKey(keyId);
 
-      const mapped = layout[keyId];
+      const activeLayer = event.shiftKey ? layout.shifted : layout.unshifted;
+      const mapped = activeLayer[keyId];
       const raw =
         typeof event.key === "string" && event.key.length === 1
           ? event.key
@@ -109,14 +117,40 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
       }
     };
 
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    const onKeyUp = (event: KeyboardEvent) => {
+      const keyId = keyIdFromEventCode(event.code);
+      if (keyId === "keyLshift") shiftDown.current.left = false;
+      if (keyId === "keyRshift") shiftDown.current.right = false;
+      if (keyId === "keyLshift" || keyId === "keyRshift") {
+        setShiftHeld(shiftDown.current.left || shiftDown.current.right);
+      } else if (!event.shiftKey) {
+        setShiftHeld(false);
+        shiftDown.current.left = false;
+        shiftDown.current.right = false;
+      }
+    };
+
+    const onBlur = () => {
+      setShiftHeld(false);
+      shiftDown.current.left = false;
+      shiftDown.current.right = false;
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+    };
   }, [flashKey, layout]);
 
   return useMemo(
     () => ({
       lastChar,
       activeKeyIds,
+      shiftHeld,
       input: {
         seq,
         t: lastInputT,
@@ -135,6 +169,7 @@ export function useTypingEngine(layout: LayoutMap): TypingEngineState {
       lastInputKeyId,
       lastRawChar,
       seq,
+      shiftHeld,
     ],
   );
 }
