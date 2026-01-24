@@ -53,3 +53,23 @@ export const staticaLayoutUnshifted: LayoutMap = {
   keySlash: "ц",
   keySpace: " ",
 };
+
+export const staticaLayoutShiftedOverrides: LayoutMap = {
+  // Matches the "С шифтом" mapping in the provided reference:
+  // digits become digits, punctuation varies by position.
+  key1: "1",
+  key2: "2",
+  key3: "3",
+  key4: "4",
+  key5: "5",
+  key6: "6",
+  key7: "7",
+  key8: "8",
+  key9: "9",
+  key0: "0",
+  keyMinus: "_",
+  keyEqual: "+",
+  keyQuote: ":",
+  keyBackslash: "/",
+  keyB: ";",
+};

@@ -1,6 +1,6 @@
 import { ALL_KEY_IDS, type KeyId, type LayoutLayers, type LayoutMap } from "../keys";
 import { graphiteLayoutShiftedOverrides, graphiteLayoutUnshifted } from "./graphite";
-import { staticaLayoutUnshifted } from "./statica";
+import { staticaLayoutShiftedOverrides, staticaLayoutUnshifted } from "./statica";
 
 export const LOCALSTORAGE_KEY = "keyshape.layoutJson.v1";
 export const LAYOUT_PRESET_LOCALSTORAGE_KEY = "keyshape.layoutPreset.v1";
@@ -140,7 +140,7 @@ function deriveShiftedFromUnshifted(unshifted: LayoutMap): LayoutMap {
 }
 
 export const DEFAULT_LAYOUT_JSON = JSON.stringify(
-  { unshifted: staticaLayoutUnshifted, shifted: {} satisfies LayoutMap },
+  { unshifted: staticaLayoutUnshifted, shifted: staticaLayoutShiftedOverrides },
   null,
   2,
 );
@@ -156,7 +156,9 @@ export function getDefaultLayoutJsonForPreset(preset: LayoutPresetId): string {
 }
 
 function getDefaultShiftedOverridesForPreset(preset: LayoutPresetId): LayoutMap {
-  return preset === "graphite" ? graphiteLayoutShiftedOverrides : {};
+  return preset === "graphite"
+    ? graphiteLayoutShiftedOverrides
+    : staticaLayoutShiftedOverrides;
 }
 
 function countLayoutDiffKeys(a: LayoutMap, b: LayoutMap): number {
