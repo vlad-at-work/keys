@@ -1,5 +1,7 @@
 import { trainerGeometry, type Finger, type KeyDef } from "./geometry";
 import type { KeyId, LayoutMap } from "./keys";
+import type { HighlightMap } from "./highlightStore";
+import { getHighlightedFinger } from "./highlightStore";
 
 const fingerColorVar: Record<Finger, string> = {
   lp: "--chart-1",
@@ -13,65 +15,6 @@ const fingerColorVar: Record<Finger, string> = {
   thumb: "--destructive",
   mod: "--muted",
   spacer: "--background",
-};
-
-const fingerOverridesByLabel: Partial<Record<string, Finger>> = {
-  // Statica finger zones (incl. "Angle Mod"):
-  // ьи: left pinky
-  // уеэ: left ring
-  // аоы: left middle
-  // жюкяпй: left index
-  // гбмтдв: right index
-  // рсч: right middle
-  // лнш: right ring
-  // хщфз.ц: right pinky
-  //
-  // Notes:
-  // - "," is commonly hit with either index depending on context; both index
-  //   fingers share the same color, so we mark it as index here.
-  ь: "lp",
-  и: "lp",
-
-  у: "lr",
-  е: "lr",
-  э: "lr",
-
-  а: "lm",
-  о: "lm",
-  ы: "lm",
-  ъ: "lm",
-  Ъ: "lm",
-
-  ж: "li",
-  ю: "li",
-  к: "li",
-  я: "li",
-  п: "li",
-  й: "li",
-  ",": "li",
-
-  г: "ri",
-  б: "ri",
-  м: "ri",
-  т: "ri",
-  д: "ri",
-  в: "ri",
-
-  р: "rm",
-  с: "rm",
-  ч: "rm",
-
-  л: "rr",
-  н: "rr",
-  ш: "rr",
-  "/": "rr",
-
-  х: "rp",
-  щ: "rp",
-  ф: "rp",
-  з: "rp",
-  ".": "rp",
-  ц: "rp",
 };
 
 function mixed(colorVar: string, weight: number) {
@@ -96,18 +39,17 @@ function keyText(finger: Finger) {
 function Keycap({
   keyDef,
   layout,
+  highlightMap,
   isActive,
 }: {
   keyDef: KeyDef;
   layout: LayoutMap;
+  highlightMap: HighlightMap;
   isActive: boolean;
 }) {
   const isSpacer = keyDef.finger === "spacer";
   const label = keyDef.fixedLabel ?? layout[keyDef.id] ?? "";
-  const finger =
-    keyDef.finger === "mod" || keyDef.finger === "spacer"
-      ? keyDef.finger
-      : (fingerOverridesByLabel[label] ?? keyDef.finger);
+  const finger = getHighlightedFinger(keyDef.finger, keyDef.id, highlightMap);
 
   return (
     <div
@@ -135,9 +77,11 @@ function Keycap({
 
 export function Keyboard({
   layout,
+  highlightMap,
   activeKeyIds,
 }: {
   layout: LayoutMap;
+  highlightMap: HighlightMap;
   activeKeyIds: ReadonlySet<KeyId>;
 }) {
   return (
@@ -159,6 +103,7 @@ export function Keyboard({
                     key={keyDef.id}
                     keyDef={keyDef}
                     layout={layout}
+                    highlightMap={highlightMap}
                     isActive={activeKeyIds.has(keyDef.id)}
                   />
                 ))}

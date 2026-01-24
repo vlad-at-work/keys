@@ -2,16 +2,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useHighlightStore } from "@/features/trainer/highlightContext";
 import { useLayoutStore } from "@/features/trainer/layouts/layoutContext";
-import {
-  DEFAULT_LAYOUT_JSON,
-  GRAPHITE_LAYOUT_JSON,
-} from "@/features/trainer/layouts/layoutStore";
 import { MAX_TRAINING_TEXT_LEN } from "@/features/trainer/trainingTextStore";
 import { useTrainingTextStore } from "@/features/trainer/trainingTextContext";
 
 export function SettingsPage() {
-  const { layoutJsonText, setLayoutJsonText } = useLayoutStore();
+  const { layoutPreset, layoutJsonText, resetLayoutJson, setLayoutJsonText, setLayoutPreset } =
+    useLayoutStore();
+  const {
+    highlightPreset,
+    highlightJsonText,
+    highlightJsonError,
+    resetHighlightJson,
+    setHighlightJsonText,
+    setHighlightPreset,
+  } =
+    useHighlightStore();
   const { trainingTextRaw, resetTrainingText, setTrainingTextRaw } =
     useTrainingTextStore();
 
@@ -23,6 +30,7 @@ export function SettingsPage() {
         <TabsList>
           <TabsTrigger value="text">Text</TabsTrigger>
           <TabsTrigger value="layout">Layout</TabsTrigger>
+          <TabsTrigger value="highlights">Highlights</TabsTrigger>
           <TabsTrigger value="other">Other</TabsTrigger>
         </TabsList>
 
@@ -32,16 +40,19 @@ export function SettingsPage() {
               <CardTitle>Layout JSON</CardTitle>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  onClick={() => setLayoutJsonText(DEFAULT_LAYOUT_JSON)}
+                  variant={layoutPreset === "statica" ? "secondary" : "outline"}
+                  onClick={() => setLayoutPreset("statica")}
                 >
-                  Restore Statica
+                  Statica
                 </Button>
                 <Button
-                  variant="outline"
-                  onClick={() => setLayoutJsonText(GRAPHITE_LAYOUT_JSON)}
+                  variant={layoutPreset === "graphite" ? "secondary" : "outline"}
+                  onClick={() => setLayoutPreset("graphite")}
                 >
-                  Restore Graphite
+                  Graphite
+                </Button>
+                <Button variant="outline" onClick={resetLayoutJson}>
+                  Reset current
                 </Button>
               </div>
             </CardHeader>
@@ -58,6 +69,75 @@ export function SettingsPage() {
                 <code className="font-mono">"keyBackslash"</code>,{" "}
                 <code className="font-mono">"keySpace"</code>. Values must be
                 strings.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="highlights">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-4">
+              <CardTitle>Highlight JSON</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={highlightPreset === "angle" ? "secondary" : "outline"}
+                  onClick={() => setHighlightPreset("angle")}
+                >
+                  Angle
+                </Button>
+                <Button
+                  variant={highlightPreset === "normal" ? "secondary" : "outline"}
+                  onClick={() => setHighlightPreset("normal")}
+                >
+                  Normal
+                </Button>
+                <Button variant="outline" onClick={resetHighlightJson}>
+                  Reset current
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Textarea
+                value={highlightJsonText}
+                onChange={(e) => setHighlightJsonText(e.target.value)}
+                spellCheck={false}
+                className="min-h-[420px]"
+              />
+              {highlightJsonError ? (
+                <div className="text-sm text-destructive">
+                  {highlightJsonError}
+                </div>
+              ) : null}
+              <div className="text-sm text-muted-foreground">
+                Keys are internal ids like{" "}
+                <code className="font-mono">"keyA"</code>,{" "}
+                <code className="font-mono">"keyBackslash"</code>,{" "}
+                <code className="font-mono">"keySpace"</code>. Values must be
+                one of{" "}
+                <code className="font-mono">
+                  "lp"
+                </code>,{" "}
+                <code className="font-mono">
+                  "lr"
+                </code>,{" "}
+                <code className="font-mono">
+                  "lm"
+                </code>,{" "}
+                <code className="font-mono">
+                  "li"
+                </code>,{" "}
+                <code className="font-mono">
+                  "ri"
+                </code>,{" "}
+                <code className="font-mono">
+                  "rm"
+                </code>,{" "}
+                <code className="font-mono">
+                  "rr"
+                </code>,{" "}
+                <code className="font-mono">
+                  "rp"
+                </code>.
               </div>
             </CardContent>
           </Card>

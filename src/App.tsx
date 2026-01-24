@@ -4,10 +4,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { ConfettiRef } from "@/components/ui/confetti";
 import { Confetti } from "@/components/ui/confetti";
+import { Separator } from "@/components/ui/separator";
+import {
+  type HighlightPresetId,
+} from "@/features/trainer/highlightStore";
 import {
   LayoutProvider,
   useLayoutStore,
 } from "@/features/trainer/layouts/layoutContext";
+import { HighlightProvider, useHighlightStore } from "@/features/trainer/highlightContext";
 import { TrainingTextProvider } from "@/features/trainer/trainingTextContext";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TrainerPage } from "@/pages/TrainerPage";
@@ -26,7 +31,9 @@ export default function App() {
   return (
     <LayoutProvider>
       <TrainingTextProvider>
-        <AppWithLayout />
+        <HighlightProvider>
+          <AppWithLayout />
+        </HighlightProvider>
       </TrainingTextProvider>
     </LayoutProvider>
   );
@@ -47,12 +54,16 @@ function AppWithLayout() {
 }
 
 function AppShell({ route }: { route: Route }) {
-  const { layoutJsonError } = useLayoutStore();
+  const { layoutJsonError, layoutPreset, setLayoutPreset } = useLayoutStore();
+  const { highlightPreset, setHighlightPreset } = useHighlightStore();
   const showError = useMemo(
     () => layoutJsonError && layoutJsonError.length > 0,
     [layoutJsonError],
   );
   const confettiRef = useRef<ConfettiRef>(null);
+
+  const activeLayoutPreset = layoutPreset;
+  const activeHighlightPreset: HighlightPresetId = highlightPreset;
 
   useEffect(() => {
     const handler = (_event: Event) => {
@@ -82,7 +93,7 @@ function AppShell({ route }: { route: Route }) {
         className="pointer-events-none fixed inset-0 z-[10000] h-full w-full"
         aria-hidden="true"
       />
-      <div className="fixed left-6 top-6 z-50 flex items-center gap-1 rounded-lg border border-border/50 bg-background/70 p-1 backdrop-blur">
+      <div className="fixed left-6 top-6 z-50 flex flex-wrap items-center gap-1 rounded-lg border border-border/50 bg-background/70 p-1 backdrop-blur">
         <Button
           asChild
           variant={route === "main" ? "secondary" : "ghost"}
@@ -103,6 +114,58 @@ function AppShell({ route }: { route: Route }) {
             <span className="hidden sm:inline">Settings</span>
           </a>
         </Button>
+
+        {route === "main" ? (
+          <>
+            <Separator orientation="vertical" className="mx-1 h-6" />
+            <div className="flex items-center gap-1">
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Layout
+              </span>
+              <Button
+                variant={activeLayoutPreset === "statica" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setLayoutPreset("statica")}
+                title="Switch layout to Statica"
+              >
+                Statica
+              </Button>
+              <Button
+                variant={
+                  activeLayoutPreset === "graphite" ? "secondary" : "ghost"
+                }
+                size="sm"
+                onClick={() => setLayoutPreset("graphite")}
+                title="Switch layout to Graphite"
+              >
+                Graphite
+              </Button>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Highlights
+              </span>
+              <Button
+                variant={activeHighlightPreset === "angle" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setHighlightPreset("angle")}
+                title="Switch highlights to Angle"
+              >
+                Angle
+              </Button>
+              <Button
+                variant={
+                  activeHighlightPreset === "normal" ? "secondary" : "ghost"
+                }
+                size="sm"
+                onClick={() => setHighlightPreset("normal")}
+                title="Switch highlights to Normal"
+              >
+                Normal
+              </Button>
+            </div>
+          </>
+        ) : null}
       </div>
 
       {showError ? (

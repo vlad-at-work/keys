@@ -6,6 +6,7 @@ import { MetricsBar } from "@/features/trainer/metrics";
 import type { Token } from "@/features/trainer/text";
 import { buildTokensFromText } from "@/features/trainer/text";
 import { useCurrentTracker } from "@/features/trainer/useCurrentTracker";
+import { useHighlightStore } from "@/features/trainer/highlightContext";
 import { useSession } from "@/features/trainer/useSession";
 import { useTypingEngine } from "@/features/trainer/useTypingEngine";
 import { useLayoutStore } from "@/features/trainer/layouts/layoutContext";
@@ -69,6 +70,7 @@ function getViewport<T>(tokens: readonly T[], cursor: number) {
 export function TrainerPage() {
   const { layoutMap } = useLayoutStore();
   const { trainingText } = useTrainingTextStore();
+  const { highlightMap } = useHighlightStore();
   const { activeKeyIds, input } = useTypingEngine(layoutMap);
   const tokens = useMemo(
     () => buildTokensFromText(trainingText),
@@ -113,7 +115,11 @@ export function TrainerPage() {
         </main>
 
         <footer className="pb-2">
-          <Keyboard layout={layoutMap} activeKeyIds={activeKeyIds} />
+          <Keyboard
+            layout={layoutMap}
+            highlightMap={highlightMap}
+            activeKeyIds={activeKeyIds}
+          />
           <div className="mt-4">
             <MetricsBar wpm={metrics.wpm} accuracy={metrics.accuracy} />
           </div>
