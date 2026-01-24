@@ -9,6 +9,8 @@ export function Chunk({
   cursor: number;
   hasError: boolean;
 }) {
+  const showEndCaret = cursor === tokens.length && !hasError;
+
   return (
     <div className="mx-auto w-full max-w-5xl">
       <div className="font-mono text-4xl leading-tight tracking-wide text-muted-foreground sm:text-5xl">
@@ -47,6 +49,16 @@ export function Chunk({
             </span>
           );
         })}
+        {showEndCaret ? (
+          <span
+            className={[
+              "relative inline-block",
+              "after:absolute after:-left-1 after:bottom-1 after:h-7 after:w-[2px] after:bg-primary/60 after:content-['']",
+            ].join(" ")}
+          >
+            <wbr />
+          </span>
+        ) : null}
       </div>
     </div>
   );

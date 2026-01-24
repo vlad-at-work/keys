@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import type { ConfettiRef } from "@/components/ui/confetti";
 import { Confetti } from "@/components/ui/confetti";
 import { Separator } from "@/components/ui/separator";
-import {
-  type HighlightPresetId,
-} from "@/features/trainer/highlightStore";
+import { type HighlightPresetId } from "@/features/trainer/highlightStore";
 import {
   LayoutProvider,
   useLayoutStore,
 } from "@/features/trainer/layouts/layoutContext";
 import { HighlightProvider, useHighlightStore } from "@/features/trainer/highlightContext";
+import { TypingModeProvider, useTypingMode } from "@/features/trainer/modeContext";
 import { TrainingTextProvider } from "@/features/trainer/trainingTextContext";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TrainerPage } from "@/pages/TrainerPage";
@@ -32,7 +31,9 @@ export default function App() {
     <LayoutProvider>
       <TrainingTextProvider>
         <HighlightProvider>
-          <AppWithLayout />
+          <TypingModeProvider>
+            <AppWithLayout />
+          </TypingModeProvider>
         </HighlightProvider>
       </TrainingTextProvider>
     </LayoutProvider>
@@ -56,6 +57,7 @@ function AppWithLayout() {
 function AppShell({ route }: { route: Route }) {
   const { layoutJsonError, layoutPreset, setLayoutPreset } = useLayoutStore();
   const { highlightPreset, setHighlightPreset } = useHighlightStore();
+  const { mode, setMode } = useTypingMode();
   const showError = useMemo(
     () => layoutJsonError && layoutJsonError.length > 0,
     [layoutJsonError],
@@ -166,6 +168,30 @@ function AppShell({ route }: { route: Route }) {
                 title="Switch highlights to Normal"
               >
                 Normal
+              </Button>
+            </div>
+          </div>
+
+          <Separator className="bg-border/60" />
+
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Mode</div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant={mode === "practice" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setMode("practice")}
+                title="Practice mode: repeat preset text"
+              >
+                Practice
+              </Button>
+              <Button
+                variant={mode === "free" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setMode("free")}
+                title="Free mode: type anything (no checks)"
+              >
+                Free
               </Button>
             </div>
           </div>
